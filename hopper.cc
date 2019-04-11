@@ -9,7 +9,7 @@ using namespace std;
 
 void get_input_values(int n, vector<vector<int>>& v);
 void print(vector<vector<int>>& numbers);
-void calculate_neighbours(vector<vector<int>>& numbers);
+void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
 
 int main()
 {
@@ -19,7 +19,7 @@ int main()
 	vector<vector<int>> numbers(n);
 	get_input_values(n, numbers);
 
-	calculate_neighbours(numbers);
+	calculate_neighbours(numbers, D, M);
 
 	print(numbers);
 }
@@ -35,25 +35,37 @@ void get_input_values(int n, vector<vector<int>>& numbers)
 	}
 }
 
-// inner vector is filled with indexes to whatever indexes the hopper can access.
-void calculate_neighbours(vector<vector<int>>& numbers) {
+// inner vectors are filled with indexes to whatever indexes the hopper can jump to
+void calculate_neighbours(vector<vector<int>>& numbers, int D, int M) {
+	long unsigned int nr_size {numbers.size()};
 
-
+	for (int i{}; i<nr_size; i++)
+	{
+		for (int k{i+1}; k<=i+D; k++)
+		{
+			if (k < nr_size && M >= abs(numbers[i][0] - numbers[k][0]))
+			{
+				numbers[i].push_back(k);
+				numbers[k].push_back(i);
+			}
+		}
+	}
 }
 
 // prints numbers and neighbours
 void print(vector<vector<int>>& numbers)
 {
-	cout << endl << setw(5) << left << "idx" << setw(5) << left << "value" << setw(12) << right << "neighbours" << endl;
+	cout << endl << setw(5) << left << "idx" << setw(5) << left << "value"
+		<< setw(12) << right << "neighbours" << endl;
 
 	for (int row{}; row<numbers.size(); row++)
 	{
-		cout << " " << row << ":" << setw(4) << "[" << numbers[row][0] << "," << setw(4) << " [";
+		cout << " " << row << ":" << setw(5) << numbers[row][0] << "    ";
 
 		for (int k{1}; k<numbers[row].size();k++)
 		{
-			cout << numbers[row][k] << ", ";
+			cout << numbers[row][k] << " ";
 		}
-		cout << "]]" << endl;
+		cout << endl;
 	}
 }
