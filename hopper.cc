@@ -76,7 +76,7 @@ void depth_first_search(vector<vector<int>>& numbers) {
 	cout << max_steps << endl;
 }
 
-// outer vector is filled with the given values
+// numbers[1..n][0] are the values given by the user input
 void get_input_values(int n, vector<vector<int>>& numbers)
 {
 	for (int i{}; i<n;++i)
@@ -87,7 +87,7 @@ void get_input_values(int n, vector<vector<int>>& numbers)
 	}
 }
 
-// inner vectors are filled with indexes to whatever indexes the hopper can jump to
+// numbers[A][1..k] are the indexes of the neighbours of index A
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M) {
 	long unsigned int nr_size {numbers.size()};
 
