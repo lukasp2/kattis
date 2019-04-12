@@ -10,6 +10,7 @@ using namespace std;
 void get_input_values(int n, vector<vector<int>>& v);
 void print(vector<vector<int>>& numbers);
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
+void depth_first_search(vector<vector<int>>& numbers);
 
 int main()
 {
@@ -22,6 +23,8 @@ int main()
 	calculate_neighbours(numbers, D, M);
 
 	print(numbers);
+
+	depth_first_search(numbers);
 
 	// tracks the longest found exploration sequence
 	int max_steps{};
@@ -70,6 +73,12 @@ int main()
 	}}
 
 	cout << max_steps << endl;
+}
+
+// performs a DFS search for the longest exploration sequence
+void depth_first_search(vector<vector<int>>& numbers) {
+
+
 }
 
 // outer vector is filled with the given values
