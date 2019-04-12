@@ -5,8 +5,9 @@
 #include <stack>
 #include <unordered_map>
 
-using namespace std;
+#define verbose true
 
+using namespace std;
 void get_input_values(int n, vector<vector<int>>& v);
 void print(vector<vector<int>>& numbers);
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
@@ -16,25 +17,24 @@ int main()
 {
 	int n, D, M;
 	cin >> n >> D >> M;
-	
-	vector<vector<int>> numbers(n);	
+
+	vector<vector<int>> numbers(n);
 	get_input_values(n, numbers);
-	
+
 	calculate_neighbours(numbers, D, M);
-	print(numbers);
+	if (verbose) print(numbers);
 	depth_first_search(numbers);
 }
 
 // performs a DFS search for the longest exploration sequence
 void depth_first_search(vector<vector<int>>& numbers) {
-	
+	/* improvement?: choose a start node with highest branch factor (only need to look at an index
+	 * interval of [1,7]. you can also always pop the node with highest branch factor. worth it?
+	 */
+
 	// tracks the longest found exploration sequence
 	int max_steps{};
 
-	// idea: choose a start node with highest branch factor (only need to look at an index interval of 1..7)
-	// 	 you can also always pop the node with highest branch factor. is it worth it?
-
-	// DFS
 	// log all nodes as unvisited except start
 	unordered_map<int, bool> visited{};
 	visited[0] = true;
@@ -42,14 +42,14 @@ void depth_first_search(vector<vector<int>>& numbers) {
 	// loop through all unvisited nodes in the graph
 	for (int start{}; start<numbers.size(); ++start) { if (!visited[start] || start == 0)
 	{
-		cout << endl << "start = " << start << endl;
+		if (verbose) cout << endl << "start = " << start << endl;
 
 		int curr_steps{};
 		stack<int> s; s.push(start);
 		while (!s.empty())
 		{
 			int curr = s.top(); s.pop();
-			cout << "\tcurr = " << curr << endl;
+			if (verbose) cout << "\tcurr = " << curr << endl;
 
 			visited[curr] = true;
 			curr_steps++;
@@ -61,11 +61,11 @@ void depth_first_search(vector<vector<int>>& numbers) {
 					s.push(numbers[curr][neighbour]);
 					visited[ numbers[curr][neighbour] ] = true;
 
-					cout << "\t\tpushed " << numbers[curr][neighbour] << endl;
+					if (verbose) cout << "\t\tpushed " << numbers[curr][neighbour] << endl;
 				}
 			}
 		}
-		cout << "\tsteps = " << curr_steps << endl;
+		if (verbose) cout << "\tsteps = " << curr_steps << endl;
 
 		if (curr_steps > max_steps)
 			max_steps = curr_steps;
