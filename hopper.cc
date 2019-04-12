@@ -1,7 +1,5 @@
-#include <cmath>
 #include <iostream>
 #include <iomanip>
-#include <algorithm>
 #include <vector>
 #include <string>
 #include <stack>
@@ -23,28 +21,32 @@ int main()
 
 	calculate_neighbours(numbers, D, M);
 
-//	print(numbers);
+	print(numbers);
 
 	// tracks the longest found exploration sequence
 	int max_steps{};
 
-	// depth first search
-	// select a start node (one with highest branching factor?)
-	for (int start{}; start<numbers.size(); ++start) {
+	// idea: choose a start node with highest branch factor (only need to look at an index interval of 1..7)
+	// 	 you can also always pop the node with highest branch factor. is it worth it?
+
+	// DFS
+	// log all nodes as unvisited except start
+	unordered_map<int, bool> visited{};
+	visited[0] = true;
+
+	// loop through all unvisited nodes in the graph
+	for (int start{}; start<numbers.size(); ++start) { if (!visited[start] || start == 0)
+	{
+		cout << endl << "start = " << start << endl;
+
 		int curr_steps{};
-
-		// log all nodes as unvisited except start
-		unordered_map<int, bool> visited{};
-		visited[start] = true;
-
-//		cout << endl << "start = " << start << endl;
-
 		stack<int> s; s.push(start);
 		while (!s.empty())
 		{
 			int curr = s.top(); s.pop();
-//			cout << "\tcurr = " << curr << endl;
+			cout << "\tcurr = " << curr << endl;
 
+			visited[curr] = true;
 			curr_steps++;
 
 			// push all unvisited neighbours to the stack
@@ -54,18 +56,18 @@ int main()
 					s.push(numbers[curr][neighbour]);
 					visited[ numbers[curr][neighbour] ] = true;
 
-//					cout << "\t\tpushed " << numbers[curr][neighbour] << endl;
+					cout << "\t\tpushed " << numbers[curr][neighbour] << endl;
 				}
 			}
 		}
-//		cout << "\tsteps = " << curr_steps << endl;
+		cout << "\tsteps = " << curr_steps << endl;
 
 		if (curr_steps > max_steps)
 			max_steps = curr_steps;
 
 		if (max_steps == numbers.size())
 			break;
-	}
+	}}
 
 	cout << max_steps << endl;
 }
