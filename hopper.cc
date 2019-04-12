@@ -23,32 +23,51 @@ int main()
 
 	calculate_neighbours(numbers, D, M);
 
-	print(numbers);
+//	print(numbers);
+
+	// tracks the longest found exploration sequence
+	int max_steps{};
 
 	// depth first search
 	// select a start node (one with highest branching factor?)
 	for (int start{}; start<numbers.size(); ++start) {
+		int curr_steps{};
 
 		// log all nodes as unvisited except start
 		unordered_map<int, bool> visited{};
 		visited[start] = true;
 
+//		cout << endl << "start = " << start << endl;
+
 		stack<int> s; s.push(start);
-		while (!q.empty()) {
-			// pop element from the stack
-			int curr = s.pop()
+		while (!s.empty())
+		{
+			int curr = s.top(); s.pop();
+//			cout << "\tcurr = " << curr << endl;
 
-			// if visited : break? // or while (visited[curr] { curr = s.pop()});
+			curr_steps++;
 
-			//visited[curr] = true
-			//
+			// push all unvisited neighbours to the stack
+			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
+			{
+				if (!visited[ numbers[curr][neighbour] ]) {
+					s.push(numbers[curr][neighbour]);
+					visited[ numbers[curr][neighbour] ] = true;
 
-			// push all neighbours to the stack
-			for (int neighs{}; neighs<numbers[curr].size(); ++neighs) {
-				q.push(numbers[curr][neigh])
+//					cout << "\t\tpushed " << numbers[curr][neighbour] << endl;
+				}
 			}
 		}
+//		cout << "\tsteps = " << curr_steps << endl;
+
+		if (curr_steps > max_steps)
+			max_steps = curr_steps;
+
+		if (max_steps == numbers.size())
+			break;
 	}
+
+	cout << max_steps << endl;
 }
 
 // outer vector is filled with the given values
