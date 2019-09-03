@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <stack>
+#include <queue>
 #include <unordered_map>
 
 using namespace std;
@@ -9,6 +10,9 @@ using namespace std;
 void get_input_values(vector<vector<int>>& v);
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
 int depth_first_search(vector<vector<int>>& numbers);
+bool BFS_set_candidate(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx, int search_type);
+bool check_nw_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
+void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw);
 
 class path {
 public:
@@ -60,7 +64,11 @@ int depth_first_search(vector<vector<int>>& numbers)
 {
 	int max_hops{};
 
-	for (int start{}; start<numbers.size(); ++start)
+	unordered_map<int, bool> candidates{};
+	int largest_nw{};
+	analyze(candidates, numbers, largest_nw);
+
+	for (int start{}; start<numbers.size(); ++start) if ( candidates[start] == true ) {
 	{
 		path path{};
 
@@ -86,10 +94,86 @@ int depth_first_search(vector<vector<int>>& numbers)
 
 		if (path.get_record() > max_hops) max_hops = path.get_record();
 
-		if (max_hops == numbers.size())	break;
-	}
+		if (max_hops == largest_nw) break;
+	}}
 
 	return max_hops;
+}
+
+void check_nw_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	unordered_map<int, bool>& visited, int node_idx, int& nw_size) {
+
+	visited[node_idx] = true;
+
+	queue<int> q{}; q.push(node_idx);
+	while(!q.empty()) {
+		int curr { q.front() }; q.pop();
+
+		nw_size++;
+
+		for (int i{1}; i < numbers[curr].size(); i++) {
+			if (!visited[numbers[curr][i]]) {
+				q.push(numbers[curr][i]);
+				visited[numbers[curr][i]] = true;
+			}
+		}
+	}
+}
+
+bool BFS_set_candidate(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	unordered_map<int, bool>& visited, int node_idx, int search_type) {
+
+	visited[node_idx] = true;
+
+	queue<int> q{}; q.push(node_idx);
+	while(!q.empty()) {
+		int curr { q.front() }; q.pop();
+
+		if (search_type == 0) { if (candidates[curr]) { return true; } }
+		if (search_type == 1) { candidates[curr] = true; }
+
+		for (int i{1}; i < numbers[curr].size(); i++) {
+			if (!visited[numbers[curr][i]]) {
+				q.push(numbers[curr][i]);
+				visited[numbers[curr][i]] = true;
+			}
+		}
+	}
+	return false;
+}
+
+// excludes nodes that cannot be a starting node in the longest path
+void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw)
+{
+	for (int i{}; i<numbers.size(); ++i) {
+		if ( numbers[i].size() == 2 ) {
+			candidates[i] = true;
+		}
+	}
+
+	unordered_map<int, bool> visited{};
+	for (int i{}; i<numbers.size(); ++i) {
+		// for each network we have not yet visited
+		if (!visited[i]) {
+			// if there is no node that is a candidate in the nw
+			if (!BFS_set_candidate(candidates, numbers, visited, i, 0)) {
+				//set all nodes in the nw to be a candidate
+				BFS_set_candidate(candidates, numbers, visited, i, 1);
+			}
+		}
+	}
+
+	visited = unordered_map<int, bool>{};
+	for (int i{}; i<numbers.size(); ++i) {
+		int nw_size{};
+		if (!visited[i]) {
+			check_nw_size(candidates, numbers, visited, i, nw_size);
+		}
+
+		if (nw_size > largest_nw) {
+			largest_nw = nw_size;
+		}
+	}
 }
 
 // numbers[1..n][0] are the values from the user input

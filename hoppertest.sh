@@ -58,6 +58,15 @@ test "8 8 1" "1 6 3 5 4 4 8 2" "7"
 echo "test case 11 : backtracking 2, multiple steps"
 test "7 2 1" "1 2 1 3 0 4 5" "7"
 
+echo "test case 12 : seperated networks 1"
+test "6 4 1" "1 2 4 4 4 4" "4"
+
+echo "test case 13 : seperated networks 2 : three nodes -two connected"
+test "3 2 1" "1 2 4" "2"
+
+echo "test case 14 : seperated networks 3 : two nodes not connected"
+test "2 1 1" "1 3" "1"
+
 
 
 
