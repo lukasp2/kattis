@@ -55,6 +55,7 @@ int main()
 	cout << dfs(numbers) << endl;
 }
 
+// performs a dfs search for the longest path in the graph
 int dfs(vector<vector<int>>& numbers)
 {
 	int max_hops{};
@@ -106,18 +107,22 @@ int dfs(vector<vector<int>>& numbers)
 
 // count number of nodes in a network of nodes
 void get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
-	unordered_map<int, bool>& visited, int node_idx, int& nw_size) {
-
+	unordered_map<int, bool>& visited, int node_idx, int& nw_size)
+{
 	visited[node_idx] = true;
 
 	queue<int> q{}; q.push(node_idx);
-	while(!q.empty()) {
+
+	while(!q.empty())
+	{
 		int curr { q.front() }; q.pop();
 
 		nw_size++;
 
-		for (int i{1}; i < numbers[curr].size(); i++) {
-			if (!visited[numbers[curr][i]]) {
+		for (int i{1}; i < numbers[curr].size(); i++)
+		{
+			if (!visited[numbers[curr][i]])
+			{
 				q.push(numbers[curr][i]);
 				visited[numbers[curr][i]] = true;
 			}
@@ -126,20 +131,27 @@ void get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& n
 }
 
 // excludes nodes that cannot be a starting node in the longest path
-void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count) {
+void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	int back, int i, int rec_count)
+{
 	if (rec_count++ > 2000) return; // prevent kattis memory overuse (1024 MB)
 
 	int neigh{1};
-	while (numbers[i][neigh] == back) { neigh++; }
+	while (numbers[i][neigh] == back) neigh++;
 
-	if (numbers[numbers[i][neigh]].size() == 3) {
+	if (numbers[numbers[i][neigh]].size() == 3)
+	{
 		candidates[numbers[i][neigh]] = false;
-		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
+
 		exclude_nodes(candidates, numbers, i, numbers[i][neigh], rec_count);
+
+		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
 	}
 
-	if ( numbers[numbers[i][neigh]].size() > 3 ) {
+	if ( numbers[numbers[i][neigh]].size() > 3 )
+	{
 		candidates[numbers[i][neigh]] = false;
+
 		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
 	}
 }
@@ -147,25 +159,37 @@ void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& nu
 // gather constraints to make searching less time complex
 void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw)
 {
-	for (int i{}; i<numbers.size(); ++i) {
+	// setting all nodes to be a candidate
+	for (int i{}; i<numbers.size(); ++i)
+	{
 		candidates[i] = true;
 	}
 
-	for (int i{}; i<numbers.size(); ++i) {
-		if (numbers[i].size() == 2) {
+	// exclude nodes
+	for (int i{}; i<numbers.size(); ++i)
+	{
+		if (numbers[i].size() == 2)
+		{
 			int rec_count{};
+
 			exclude_nodes(candidates, numbers, i, i, rec_count);
 		}
 	}
 
+	// calculate the size of the largest subgraph of connected nodes
 	unordered_map<int, bool> visited{};
-	for (int i{}; i<numbers.size(); ++i) {
+
+	for (int i{}; i<numbers.size(); ++i)
+	{
 		int nw_size{};
-		if (!visited[i]) {
+
+		if (!visited[i])
+		{
 			get_graph_size(candidates, numbers, visited, i, nw_size);
 		}
 
-		if (nw_size > largest_nw) {
+		if (nw_size > largest_nw)
+		{
 			largest_nw = nw_size;
 		}
 	}
@@ -200,7 +224,7 @@ void get_graph(vector<vector<int>>& numbers, int D, int M)
 	}
 }
 
-// prints numbers and neighbours
+// prints graph
 void print(vector<vector<int>>& numbers)
 {
 	cout << endl << setw(5) << left << "idx" << setw(5) << left << "value"
@@ -218,7 +242,7 @@ void print(vector<vector<int>>& numbers)
 	}
 }
 
-// path
+// path member functions
 void path::add_node(pair<int, int>& parent_child)
 {
 	if (parent_child.first != -1)
