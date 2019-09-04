@@ -22,32 +22,17 @@ class path {
 public:
 	path() : nodes{}, record_depth{} {}
 
-	void add_node(pair<int, int>& parent_child)
-	{
-		if (parent_child.first != -1)
-		{
-			while ( parent_child.first != nodes.back() )
-			{
-				pathed_nodes[nodes.back()] = false; nodes.pop_back();
-			}
-		}
-
-		pathed_nodes[parent_child.second] = true; nodes.push_back(parent_child.second);
-
-		update_depth();
-	}
+	void add_node(pair<int, int>& parent_child);
 
 	bool contains(int node_idx) { return pathed_nodes[node_idx]; }
 
 	int get_record() { return record_depth; }
 
-	void print() {cout<<nodes[0];for(int i{1};i<nodes.size();i++)cout<<"->"<<nodes[i];}
-
 	int get_depth() { return nodes.size(); }
 
-private:
-	void update_depth() { if (nodes.size() > record_depth) { record_depth = nodes.size(); } };
+	void print() {cout<<nodes[0];for(int i{1};i<nodes.size();i++)cout<<"->"<<nodes[i];}
 
+private:
 	vector<int> nodes{};
 
 	unordered_map<int, bool> pathed_nodes{};
@@ -232,3 +217,37 @@ void print(vector<vector<int>>& numbers)
 		cout << endl;
 	}
 }
+
+// path
+void path::add_node(pair<int, int>& parent_child)
+{
+	if (parent_child.first != -1)
+	{
+		while ( parent_child.first != nodes.back() )
+		{
+			pathed_nodes[nodes.back()] = false; nodes.pop_back();
+		}
+	}
+
+	pathed_nodes[parent_child.second] = true; nodes.push_back(parent_child.second);
+
+	if (nodes.size() > record_depth)
+	{
+		record_depth = nodes.size();
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
