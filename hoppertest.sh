@@ -67,6 +67,16 @@ test "3 2 1" "1 2 4" "2"
 echo "test case 14 : seperated networks 3 : two nodes not connected"
 test "2 1 1" "1 3" "1"
 
+echo "test case 15 : big loop"
+test "6 2 2" "3 4 1 5 3 1" "6"
+
+echo "test case 16 : answer != largest nw 1"
+test "10 2 2" "5 3 6 7 9 5 3 6 7 9" "8"
+
+echo "test case 17 : answer != largest nw 2"
+test "20 2 2" "5 3 6 7 9 5 3 6 7 9 5 3 6 7 9 5 3 6 7 9" "14"
+
+
 
 
 

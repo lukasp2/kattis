@@ -10,11 +10,11 @@
 
 using namespace std;
 
-void get_input_values(vector<vector<int>>& v);
-void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
-int depth_first_search(vector<vector<int>>& numbers);
-bool check_nw_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
-void exclude_candidates(unordered_map<int, bool> candidates, vector<vector<int>>& numbers, int i, int rec_count);
+void get_input(vector<vector<int>>& v);
+void get_graph(vector<vector<int>>& numbers, int D, int M);
+int dfs(vector<vector<int>>& numbers);
+bool get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
+void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count);
 void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw);
 void print(vector<vector<int>>& numbers);
 
@@ -42,7 +42,9 @@ public:
 	int get_record() { return record_depth; }
 
 	void print() {cout<<nodes[0];for(int i{1};i<nodes.size();i++)cout<<"->"<<nodes[i];}
+
 	int get_depth() { return nodes.size(); }
+
 private:
 	void update_depth() { if (nodes.size() > record_depth) { record_depth = nodes.size(); } };
 
@@ -59,16 +61,16 @@ int main()
 
 	vector<vector<int>> numbers(n);
 
-	get_input_values(numbers);
+	get_input(numbers);
 
-	calculate_neighbours(numbers, D, M);
+	get_graph(numbers, D, M);
 
 	if (verbose) print(numbers);
 
-	cout << depth_first_search(numbers) << endl;
+	cout << dfs(numbers) << endl;
 }
 
-int depth_first_search(vector<vector<int>>& numbers)
+int dfs(vector<vector<int>>& numbers)
 {
 	int max_hops{};
 
@@ -76,8 +78,11 @@ int depth_first_search(vector<vector<int>>& numbers)
 
 	unordered_map<int, bool> candidates{};
 	int largest_nw{};
+
 	analyze(candidates, numbers, largest_nw);
+
 	if (verbose) cout << "largest nw: " << largest_nw << endl;
+
 	for (int start{}; start<numbers.size(); ++start) if ( candidates[start] == true ) {
 	{
 		path path{};
@@ -115,7 +120,7 @@ int depth_first_search(vector<vector<int>>& numbers)
 }
 
 // count number of nodes in a network of nodes
-void check_nw_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+void get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	unordered_map<int, bool>& visited, int node_idx, int& nw_size) {
 
 	visited[node_idx] = true;
@@ -136,16 +141,21 @@ void check_nw_size(unordered_map<int, bool>& candidates, vector<vector<int>>& nu
 }
 
 // excludes nodes that cannot be a starting node in the longest path
-void exclude_candidates(unordered_map<int, bool> candidates, vector<vector<int>>& numbers, int i, int rec_count) {
-	if (rec_count++ > 100) return; // prevent memory err.
+void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count) {
+	if (rec_count++ > 2000) return; // prevent kattis memory overuse (1024 MB)
 
-	if (numbers[numbers[i][1]].size() == 3) {
-		candidates[numbers[i][1]] = false;
-		exclude_candidates(candidates, numbers, numbers[i][1], rec_count);
+	int neigh{1};
+	while (numbers[i][neigh] == back) { neigh++; }
+
+	if (numbers[numbers[i][neigh]].size() == 3) {
+		candidates[numbers[i][neigh]] = false;
+		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
+		exclude_nodes(candidates, numbers, i, numbers[i][neigh], rec_count);
 	}
 
-	if ( numbers[i].size() > 3 ) {
-		candidates[i] = false;
+	if ( numbers[numbers[i][neigh]].size() > 3 ) {
+		candidates[numbers[i][neigh]] = false;
+		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
 	}
 }
 
@@ -159,7 +169,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	for (int i{}; i<numbers.size(); ++i) {
 		if (numbers[i].size() == 2) {
 			int rec_count{};
-			exclude_candidates(candidates, numbers, i, rec_count);
+			exclude_nodes(candidates, numbers, i, i, rec_count);
 		}
 	}
 
@@ -167,7 +177,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	for (int i{}; i<numbers.size(); ++i) {
 		int nw_size{};
 		if (!visited[i]) {
-			check_nw_size(candidates, numbers, visited, i, nw_size);
+			get_graph_size(candidates, numbers, visited, i, nw_size);
 		}
 
 		if (nw_size > largest_nw) {
@@ -177,7 +187,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 }
 
 // numbers[1..n][0] are the values from the user input
-void get_input_values(vector<vector<int>>& numbers)
+void get_input(vector<vector<int>>& numbers)
 {
 	for (int i{}; i<numbers.size(); ++i)
 	{
@@ -188,7 +198,7 @@ void get_input_values(vector<vector<int>>& numbers)
 }
 
 // numbers[A][1..k] are the indexes of the neighbours of index A
-void calculate_neighbours(vector<vector<int>>& numbers, int D, int M)
+void get_graph(vector<vector<int>>& numbers, int D, int M)
 {
 	long unsigned int nr_size {numbers.size()};
 
