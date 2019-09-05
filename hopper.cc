@@ -13,9 +13,10 @@ using namespace std;
 void get_input(vector<vector<int>>& v);
 void get_graph(vector<vector<int>>& numbers, int D, int M);
 int dfs(vector<vector<int>>& numbers);
-bool get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
+int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
 void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count);
-void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw);
+void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
+void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw, vector<int>& bottle_nodes);
 void print(vector<vector<int>>& numbers);
 
 class path {
@@ -63,9 +64,12 @@ int dfs(vector<vector<int>>& numbers)
 	bool found{};
 
 	unordered_map<int, bool> candidates{};
+
 	int largest_nw{};
 
-	analyze(candidates, numbers, largest_nw);
+	vector<int> bottle_nodes{};
+
+	analyze(candidates, numbers, largest_nw, bottle_nodes);
 
 	if (verbose) cout << "largest nw: " << largest_nw << endl;
 
@@ -105,10 +109,14 @@ int dfs(vector<vector<int>>& numbers)
 	return max_hops;
 }
 
-// count number of nodes in a network of nodes
-void get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
-	unordered_map<int, bool>& visited, int node_idx, int& nw_size)
+// An admissible heuristic that estimates how long the longest path can be.
+int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	unordered_map<int, bool>& visited, int node_idx)
 {
+	int edges{};
+
+	int nodes{};
+
 	visited[node_idx] = true;
 
 	queue<int> q{}; q.push(node_idx);
@@ -117,7 +125,9 @@ void get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& n
 	{
 		int curr { q.front() }; q.pop();
 
-		nw_size++;
+		nodes++;
+
+		if (numbers[curr].size() == 2) edges++;
 
 		for (int i{1}; i < numbers[curr].size(); i++)
 		{
@@ -128,6 +138,10 @@ void get_graph_size(unordered_map<int, bool>& candidates, vector<vector<int>>& n
 			}
 		}
 	}
+
+	if (edges >= 2) return nodes - edges + 2;
+
+	return nodes;
 }
 
 // excludes nodes that cannot be a starting node in the longest path
@@ -156,8 +170,37 @@ void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& nu
 	}
 }
 
+// exclude all nodes in a network
+void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx)
+{
+	unordered_map<int, bool> visited{};
+
+	visited[node_idx] = true;
+
+	queue<int> q{}; q.push(node_idx);
+
+	while(!q.empty())
+	{
+		int curr { q.front() }; q.pop();
+
+		candidates[curr] = false;
+
+		if(verbose) cout << "-"<< curr << " ";
+
+		for (int i{1}; i < numbers[curr].size(); i++)
+		{
+			if (!visited[numbers[curr][i]])
+			{
+				q.push(numbers[curr][i]);
+				visited[numbers[curr][i]] = true;
+			}
+		}
+	}
+}
+
 // gather constraints to make searching less time complex
-void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw)
+void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	int& record_path, vector<int>& bottle_nodes)
 {
 	// setting all nodes to be a candidate
 	for (int i{}; i<numbers.size(); ++i)
@@ -165,7 +208,9 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 		candidates[i] = true;
 	}
 
-	// exclude nodes
+	if (verbose) cout << "excluding neighbours to edge nodes:" << endl;
+
+	// exclude neighbours to edge nodes
 	for (int i{}; i<numbers.size(); ++i)
 	{
 		if (numbers[i].size() == 2)
@@ -175,24 +220,76 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 			exclude_nodes(candidates, numbers, i, i, rec_count);
 		}
 	}
+	if (verbose) cout << endl;
 
-	// calculate the size of the largest subgraph of connected nodes
+	// estimate a max-length of the longest path of connected nodes
 	unordered_map<int, bool> visited{};
-
 	for (int i{}; i<numbers.size(); ++i)
 	{
-		int nw_size{};
-
 		if (!visited[i])
 		{
-			get_graph_size(candidates, numbers, visited, i, nw_size);
+			int longest_path = get_max_path(candidates, numbers, visited, i);
+
+			if (longest_path > record_path)
+			{
+				record_path = longest_path;
+			}
 		}
 
-		if (nw_size > largest_nw)
+	}
+
+	if (verbose) cout << "excluding networks:" << endl;
+
+	// exclude all networks whose max-length path is below 75% of the est. longest path
+	visited = unordered_map<int, bool>{};
+	for (int i{}; i<numbers.size(); ++i)
+	{
+		if (!visited[i])
 		{
-			largest_nw = nw_size;
+			int longest_path = get_max_path(candidates, numbers, visited, i);
+
+			if (longest_path < record_path * 0.75)
+			{
+				exclude_network(candidates, numbers, i);
+			}
 		}
 	}
+
+	if (verbose) cout << endl;
+
+	// get bottle neck nodes
+	bottle_nodes.push_back( 0 );
+	for (int i{ 7 }; i<numbers.size(); i++)
+	{
+		// choose max index of the neighbours to numbers[i]
+		int max_elem{ i };
+		for (int k{ 1 }; k < numbers[i].size(); k++)
+		{
+			if ( numbers[i][k] > max_elem ) max_elem = numbers[i][k];
+		}
+
+		i = max_elem;
+
+		// if none of the nodes (i-6 .. i-1) refer to a node >i, i is a bottle node
+		bool bottlenode = true;
+		for (int k{i-6}; k < i; k++)
+		{
+			for (int u{}; u < numbers[k].size(); u++)
+			{
+				if (numbers[k][u] > i) { bottlenode = false; break; }
+			}
+
+			if (!bottlenode) { break; }
+		}
+
+		if (bottlenode)
+		{
+			bottle_nodes.push_back(i);
+		}
+	}
+
+	// print bottle nodes
+	if (verbose) { cout << "bottle nodes: "; for (int i : bottle_nodes) { cout << i << " "; } cout << endl; }
 }
 
 // numbers[1..n][0] are the values from the user input

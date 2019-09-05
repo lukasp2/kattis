@@ -77,14 +77,3 @@ echo "test case 17 : answer != largest nw 2"
 test "20 2 2" "5 3 6 7 9 5 3 6 7 9 5 3 6 7 9 5 3 6 7 9" "14"
 
 
-
-
-
-
-
-
-
-
-
-
-
