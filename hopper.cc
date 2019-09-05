@@ -13,7 +13,7 @@ using namespace std;
 void get_input(vector<vector<int>>& v);
 void get_graph(vector<vector<int>>& numbers, int D, int M);
 int dfs(vector<vector<int>>& numbers);
-int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
+int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, unordered_map<int, bool>& visited, int node_idx);
 void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count);
 void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
 void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw, vector<int>& bottle_nodes);
