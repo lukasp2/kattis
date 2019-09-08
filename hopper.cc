@@ -20,9 +20,12 @@ int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numb
 void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count);
 void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
 int common_neighbour(vector<vector<int>>& numbers, int node_1, int node_2);
-void remove_neighbour(vector<int>& neighbours, int node);
+
+void remove_neighbour(vector<vector<int>>& numbers, int node1, int node2);
+void add_neighbour(vector<vector<int>>& numbers, int node1, int node2);
+
 void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destination_node, bool move, int dont_cp = -1);
-vector<int> remove_duplicate_neighbours(vector<int>& neighbours);
+vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node);
 void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_A, int node_B, int node_C);
 
 void print(vector<vector<int>>& numbers);
@@ -206,23 +209,35 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 					// move from node_B to node A (not node C)
 					copy_neighbours(numbers, node_B, node_A, true, node_C);
 
+					if (verbose) { cout << "step 1 complete, table:" << endl;
+						print(numbers); cout << endl;
+					}
+
 					// copy from node_C to node_A (not node B)
 					copy_neighbours(numbers, node_C, node_A, false, node_B);
+					if (verbose) { cout << "step 2 complete, table:" << endl;
+						print(numbers); cout << endl;
+					}
 
 					// copy from node_A to node_C (not node B)
 					copy_neighbours(numbers, node_A, node_C, false, node_B);
 
+					if (verbose) { cout << "step 3 complete, table:" << endl;
+						print(numbers); cout << endl;
+					}
+
 					// remove connection between node_A and node_C
-					remove_neighbour(numbers[node_A], node_C);
-					remove_neighbour(numbers[node_C], node_A);
+					remove_neighbour(numbers, node_A, node_C);
 
 					// add neighbours A and C to node_B
-					numbers[node_B].push_back(node_A);
-					numbers[node_B].push_back(node_C);
+					add_neighbour(numbers, node_B, node_A);
+					add_neighbour(numbers, node_B, node_C);
+					//numbers[node_B].push_back(node_A);
+					//numbers[node_B].push_back(node_C);
 
 					// removing duplicates from node_A and node_C
-					remove_duplicate_neighbours(numbers[node_A]);
-					vector<int> tripples = remove_duplicate_neighbours(numbers[node_C]);
+					remove_duplicate_neighbours(numbers, node_A);
+					vector<int> tripples = remove_duplicate_neighbours(numbers, node_C);
 
 					if (verbose) { cout << "first step complete, table:" << endl;
 						print(numbers); cout << endl;
@@ -237,7 +252,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 					if (verbose) cout << "add tripples to chain" << endl;
 					add_to_chain(numbers, tripples, node_A, node_B, node_C);
 
-					if (verbose) cout << "table []";
+					if (verbose) cout << "sub-finished table";
 					if (verbose) { print(numbers); cout << endl; }
 
 					break;
@@ -251,10 +266,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 
 bool contains(vector<int>& neighbours, int node)
 {
-	for (int i : neighbours)
-	{
-		if (i == node) return true;
-	}
+	for (int i { 1 }; i<neighbours.size(); ++i) { if (neighbours[i] == node) return true; }
 
 	return false;
 }
@@ -271,22 +283,26 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 			if (neigh != node_A && neigh != node_C && !contains(numbers[node_A], neigh))
 			{
 				//cout << "neighbour of the tripples: " << neigh << endl;
-				numbers[node_A].push_back(neigh);
-				numbers[node_C].push_back(neigh);
+				add_neighbour(numbers, node_A, neigh);
+				add_neighbour(numbers, node_C, neigh);
 
 				// neighbour of the tripple removes the tripple as its neighbour
-				remove_neighbour(numbers[neigh], tripples[i]);
+				//remove_neighbour(numbers[neigh], tripples[i]);
+				remove_neighbour(numbers, neigh, tripples[i]);
 
 				// neighbour of the tripple adds node A and C as neighbour
-				numbers[neigh].push_back(node_A);
-				numbers[neigh].push_back(node_C);
+				//numbers[neigh].push_back(node_A);
+				//numbers[neigh].push_back(node_C);
 			}
 		}
 
 		// remove all the tripples neighbours
-		int value = numbers[tripples[i]][0];
-		numbers[tripples[i]].clear();
-		numbers[tripples[i]].push_back(value);
+		//int value = numbers[tripples[i]][0];
+		//numbers[tripples[i]].clear();
+		//numbers[tripples[i]].push_back(value);
+		for (long unsigned int k { numbers[tripples[i]].size() - 1 }; k>0; --k) {
+			remove_neighbour(numbers, tripples[i], numbers[tripples[i]][k]);
+		}
 	}
 
 	if (verbose) cout << "the neighbours of the tripples have been moved to node A and C" << endl;
@@ -296,22 +312,28 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 	for (int i{}; i<tripples.size(); ++i)
 	{
 		// A and B removes each other as neighbours
-		remove_neighbour(numbers[node_A], node_B);
-		remove_neighbour(numbers[node_B], node_A);
+		//remove_neighbour(numbers[node_A], node_B);
+		//remove_neighbour(numbers[node_B], node_A);
+		remove_neighbour(numbers, node_A, node_B);
 
-		remove_neighbour(numbers[node_C], tripples[i]);
+		//remove_neighbour(numbers[node_C], tripples[i]);
+		remove_neighbour(numbers, node_C, tripples[i]);
+
 		if (verbose) cout << "A and B removes eeach other as neighbours" << endl;
 		if (verbose) { print(numbers); cout << endl; }
 
 		// tripple adds A and B as neighbours
-		numbers[tripples[i]].push_back(node_A);
-		numbers[tripples[i]].push_back(node_B);
+		//numbers[tripples[i]].push_back(node_A);
+		//numbers[tripples[i]].push_back(node_B);
+		add_neighbour(numbers, tripples[i], node_A);
+		add_neighbour(numbers, tripples[i], node_B);
 
 		if (verbose) cout << "tripple adds A and B as neighbours" << endl;
 		if (verbose) { print(numbers); cout << endl; }
 
 		// B: adds tripple as neighbour
-		numbers[node_B].push_back(tripples[i]);
+		//numbers[node_B].push_back(tripples[i]);
+		add_neighbour(numbers, node_B, tripples[i]);
 
 		if (verbose) cout << "A and B adds tripple as neighbour" << endl;
 		if (verbose) { print(numbers); cout << endl; }
@@ -321,39 +343,42 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 	}
 }
 
-vector<int> remove_duplicate_neighbours(vector<int>& neighbours)
+vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node)
 {
 	vector<int> tripples{};
 
-	sort(neighbours.begin() + 1, neighbours.end());
+	sort(numbers[node].begin() + 1, numbers[node].end());
 
-	for (int i{ 1 }; i<neighbours.size(); ++i)
+	for (int i{ 1 }; i<numbers[node].size(); ++i)
 	{
-		int nums = count(neighbours.begin() + 1, neighbours.end(), neighbours[i]);
+		int nums = count(numbers[node].begin() + 1, numbers[node].end(), numbers[node][i]);
 
 		if (nums > 2)
 		{
-			tripples.push_back(neighbours[i]);
-			remove_neighbour(neighbours, neighbours[i]);
+			tripples.push_back(numbers[node][i]);
+			remove_neighbour(numbers, node, numbers[node][i]);
 		}
 	}
 
-	auto last = unique(neighbours.begin() + 1, neighbours.end());
-
-	neighbours.erase(last, neighbours.end());
+	auto last = unique(numbers[node].begin() + 1, numbers[node].end());
+	numbers[node].erase(last, numbers[node].end());
 
 	return tripples;
 }
 
-void remove_neighbour(vector<int>& neighbours, int node)
+void remove_neighbour(vector<vector<int>>& numbers, int node1, int node2)
 {
-	for (int i{ 1 }; i<neighbours.size(); ++i)
-	{
-		if (neighbours[i] == node)
-		{
-			neighbours.erase(neighbours.begin() + i);
-		}
-	}
+	numbers[node1].erase(find(numbers[node1].begin() + 1, numbers[node1].end(), node2));
+	numbers[node2].erase(find(numbers[node2].begin() + 1, numbers[node2].end(), node1));
+}
+
+void add_neighbour(vector<vector<int>>& numbers, int node1, int node2)
+{
+	if (!contains(numbers[node1], node2) && node1 != node2)
+		numbers[node1].push_back(node2);
+
+	if (!contains(numbers[node2], node1) && node1 != node2)
+		numbers[node2].push_back(node1);
 }
 
 void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destination_node, bool move, int dont_cp)
@@ -361,20 +386,23 @@ void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destinat
 	for (int i{ 1 }; i<numbers[source_node].size(); ++i)
 	{
 		// dont copy the destination index to the destination vector
-		if (numbers[source_node][i] != destination_node && numbers[source_node][i] != dont_cp)
+		if (numbers[source_node][i] != dont_cp)
 		{
-			numbers[destination_node].push_back(numbers[source_node][i]);
-			// test:
-			numbers[numbers[source_node][i]].push_back(destination_node);
+			add_neighbour(numbers, destination_node, numbers[source_node][i]);
 		}
 	}
 
 	// optionally erases the source vector
 	if (move)
 	{
-		int val = numbers[source_node][0];
-		numbers[source_node].clear();
-		numbers[source_node].push_back(val);
+		//int val = numbers[source_node][0];
+		//numbers[source_node].clear();
+		//numbers[source_node].push_back(val);
+
+		for (long unsigned int k { numbers[source_node].size() - 1 }; k>0; --k) {
+			remove_neighbour(numbers, source_node, numbers[source_node][k]);
+		}
+
 	}
 }
 
