@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <iomanip>
 
-#define verbose false
+#define verbose true
 
 using namespace std;
 
