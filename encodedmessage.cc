@@ -1,4 +1,5 @@
-// https://open.kattis.com/problems/encodedmessage/
+// https://open.kattis.com/problems/encodedmessage
+
 #include <cmath>
 #include <iostream>
 #include <string>
