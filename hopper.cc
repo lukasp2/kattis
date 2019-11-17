@@ -16,16 +16,18 @@ int main()
 {
 	int n, D, M;
 	cin >> n >> D >> M;
-
-	vector<vector<int>> numbers(n);
+	
+	vector<vector<int>> numbers(n);	
 	get_input_values(n, numbers);
-
+	
 	calculate_neighbours(numbers, D, M);
-
 	print(numbers);
-
 	depth_first_search(numbers);
+}
 
+// performs a DFS search for the longest exploration sequence
+void depth_first_search(vector<vector<int>>& numbers) {
+	
 	// tracks the longest found exploration sequence
 	int max_steps{};
 
@@ -71,14 +73,7 @@ int main()
 		if (max_steps == numbers.size())
 			break;
 	}}
-
 	cout << max_steps << endl;
-}
-
-// performs a DFS search for the longest exploration sequence
-void depth_first_search(vector<vector<int>>& numbers) {
-
-
 }
 
 // outer vector is filled with the given values
