@@ -5,7 +5,7 @@
 #include <stack>
 #include <unordered_map>
 
-#define verbose false
+#define verbose true
 
 using namespace std;
 void get_input_values(int n, vector<vector<int>>& v);
