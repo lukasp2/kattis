@@ -5,7 +5,7 @@
 #include <stack>
 #include <unordered_map>
 
-#define verbose true
+#define verbose false
 
 using namespace std;
 void get_input_values(int n, vector<vector<int>>& v);
@@ -29,33 +29,24 @@ int main()
 // performs a DFS search for the longest exploration sequence
 void depth_first_search(vector<vector<int>>& numbers)
 {
-	/*
-	 * improvements (?):
-	 * - choose a start node with highest branch factor (only need to look
-	 *   at an index interval of [1,7] (because of the constraint on D).
-	 *
-	 * - always pop the node with highest branch factor. (worth it?)
-	 */
-
 	// the longest found exploration sequence
 	int max_steps{};
 
-	unordered_map<int, bool> visited{};
-
 	// loop through all unvisited nodes in the graph
-	for (int start{}; start<numbers.size(); ++start) { if (!visited[start])
+	for (int start{}; start<numbers.size(); ++start)
 	{
 		if (verbose) cout << endl << "node: " << start << endl;
 
-		int curr_steps{};
+		unordered_map<int, int> map{{start, 1}};
+		unordered_map<int, bool> visited{};
+
 		stack<int> s{}; s.push(start);
 		while (!s.empty())
 		{
 			int curr{ s.top() }; s.pop();
-			if (verbose) cout << "\tpopped: " << curr << endl;
+			if (verbose) cout << "\tpopped: " << curr << ", depth " << map[curr] << endl;
 
 			visited[curr] = true;
-			curr_steps++;
 
 			// push all unvisited neighbours to the stack
 			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
@@ -63,19 +54,27 @@ void depth_first_search(vector<vector<int>>& numbers)
 				if (!visited[ numbers[curr][neighbour] ]) {
 					s.push(numbers[curr][neighbour]);
 					visited[ numbers[curr][neighbour] ] = true;
+					map[numbers[curr][neighbour]] = map[curr] + 1;
 
-					if (verbose) cout << "\t\tpushed: " << numbers[curr][neighbour] << endl;
+					if (verbose) cout << "\t\tpushed: " << numbers[curr][neighbour]
+							<< ", depth " << map[numbers[curr][neighbour]]
+							<< endl;
 				}
 			}
 		}
-		if (verbose) cout << "\tlongest path: " << curr_steps << endl;
 
-		if (curr_steps > max_steps)
-			max_steps = curr_steps;
+		int high_steps{};
+		for (auto i : map) {
+			if (i.second > high_steps) high_steps = i.second;
+		}
+		if (verbose) cout << "\tlongest path: " << high_steps << endl;
+
+		if (high_steps > max_steps)
+			max_steps = high_steps;
 
 		if (max_steps == numbers.size())
 			break;
-	}}
+	}
 
 	cout << max_steps << endl;
 }
@@ -92,7 +91,7 @@ void get_input_values(int n, vector<vector<int>>& numbers)
 }
 
 // numbers[A][1..k] are the indexes of the neighbours of index A
-void calculate_neighbours(vector<vector<int>>& numbers, int D, int M) 
+void calculate_neighbours(vector<vector<int>>& numbers, int D, int M)
 {
 	long unsigned int nr_size {numbers.size()};
 
