@@ -5,7 +5,7 @@
 #include <stack>
 #include <unordered_map>
 
-#define verbose true
+#define verbose false
 
 using namespace std;
 void get_input_values(int n, vector<vector<int>>& v);
@@ -53,25 +53,27 @@ int depth_first_search(vector<vector<int>>& numbers)
 	int max_steps{};
 	bool found{};
 
-	// loop through all unvisited nodes in the graph
-	for (int start{}; start<numbers.size(); ++start)
-	{
+	// loop through all nodes in the graph
+	for (int start{}; start<numbers.size(); ++start) {
+
 		if (verbose) cout << endl << "node: " << start << endl;
 
 		path path{};
 		unordered_map<int, bool> visited{};
 
 		stack<int> s{}; s.push(start);
-		while (!s.empty())
-		{
+		while (!s.empty()) {
+
 			int curr{ s.top() }; s.pop();
+			while (!s.empty() && path.contains(curr)) { curr = s.top(); s.pop(); }
+			if (path.contains(curr)) break;
 
 			path.add_node(curr, numbers);
-			visited[curr] = true;
+			visited[curr] = true; //neccessary?only for start?
 			bool dead_end{true};
 
 			if (verbose) { cout << "\tpopped: " << curr << ", depth " << path.get_size() << endl;
-					cout << "current path: "; path.print(); cout << endl; }
+					cout << "\tpath: "; path.print(); cout << endl; }
 
 			// push all unvisited neighbours to the stack
 			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
@@ -88,10 +90,13 @@ int depth_first_search(vector<vector<int>>& numbers)
 			if (dead_end) {
 				path.log_depth();
 
-				if (path.get_nodes_since_last_branch() != 0) { path.backtrack(); }
-				else { found = true; break; }
-
-				//cout << "backtrack!" << endl;
+				if (path.get_nodes_since_last_branch() > 0) {
+					if (verbose) cout << "\tdead end, backtrac to latest branch!" << endl;
+					path.backtrack();
+				}
+				else {
+					break;
+				}
 			}
 		}
 
@@ -100,7 +105,7 @@ int depth_first_search(vector<vector<int>>& numbers)
 		if (path.get_record() > max_steps)
 			max_steps = path.get_record();
 
-		if (found || max_steps == numbers.size())
+		if (max_steps == numbers.size())
 			break;
 	}
 

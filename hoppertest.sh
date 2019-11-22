@@ -1,5 +1,4 @@
 #!/bin/bash
-# this is a test script for hopper.cc, make sure ./a.out is the right executable
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -23,6 +22,8 @@ function test () {
 		printf "expected: $expected_res\n\n"
 	fi
 }
+
+g++ hopper.cc
 
 echo "test case 1 : sample input 1"
 test "8 3 1" "1 7 8 2 6 4 3 5" "8"
@@ -48,9 +49,23 @@ test "4 4 4" "1 2 3 4" "4"
 echo "test case 8 : complete graph (high branch factor) 2"
 test "7 7 7" "1 2 3 4 5 6 7" "7"
 
-echo "test case 9 : brach with loop"
+echo "test case 9 : tree nodes"
+test "3 1 1" "1 2 3" "3"
+
+echo "test case 10 : backtracking 1"
+test "8 8 1" "1 6 3 5 4 4 8 2" "7"
+
+echo "test case 11 : backtracking 2, multiple steps"
 test "7 2 1" "1 2 1 3 0 4 5" "7"
 
-echo "test case 10 : tree nodes"
-test "3 1 1" "1 2 3" "3"
+
+
+
+
+
+
+
+
+
+
 
