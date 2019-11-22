@@ -18,24 +18,27 @@ public:
 	{
 		if (parent_child.first != -1)
 		{
-			while (parent_child.first != nodes[nodes.size() - 1]) { nodes.pop_back(); }
+			while ( parent_child.first != nodes.back() )
+			{
+				pathed_nodes[nodes.back()] = false; nodes.pop_back();
+			}
 		}
 
-		nodes.push_back(parent_child.second);
+		pathed_nodes[parent_child.second] = true; nodes.push_back(parent_child.second);
 
-		log_depth();
+		update_depth();
 	}
 
-	bool contains(int node_idx) { for (int i : nodes) { if (i == node_idx) return true; } return false; }
+	bool contains(int node_idx) { return pathed_nodes[node_idx]; }
 
 	int get_record() { return record_depth; }
 
-	int get_size() { return nodes.size(); }
-
 private:
-	void log_depth() { if (nodes.size() > record_depth) { record_depth = nodes.size(); } };
+	void update_depth() { if (nodes.size() > record_depth) { record_depth = nodes.size(); } };
 
 	vector<int> nodes{};
+
+	unordered_map<int, bool> pathed_nodes{};
 
 	int record_depth{};
 };
@@ -50,9 +53,7 @@ int main()
 
 	calculate_neighbours(numbers, D, M);
 
-	int hops = depth_first_search(numbers);
-
-	cout << hops << endl;
+	cout << depth_first_search(numbers) << endl;
 }
 
 int depth_first_search(vector<vector<int>>& numbers)
@@ -73,20 +74,19 @@ int depth_first_search(vector<vector<int>>& numbers)
 
 			int curr = pathpair.second;
 
-			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
+			for (int neighbour{ 1 }; neighbour<numbers[curr].size(); ++neighbour)
 			{
-				if (!path.contains(numbers[curr][neighbour]))
+				if (!path.contains( numbers[curr][neighbour] ))
 				{
-					s.push(make_pair<int, int>(move(curr), move(numbers[curr][neighbour])));
+					pair<int, int> p { curr, numbers[curr][neighbour] };
+					s.push(p);
 				}
 			}
 		}
 
-		if (path.get_record() > max_hops)
-			max_hops = path.get_record();
+		if (path.get_record() > max_hops) max_hops = path.get_record();
 
-		if (max_hops == numbers.size())
-			break;
+		if (max_hops == numbers.size())	break;
 	}
 
 	return max_hops;
@@ -108,9 +108,12 @@ void calculate_neighbours(vector<vector<int>>& numbers, int D, int M)
 {
 	long unsigned int nr_size {numbers.size()};
 
-	for (int i{}; i<nr_size; ++i) {
-		for (int k{i+1}; k<=i+D; ++k) {
-			if (k < nr_size && M >= abs(numbers[i][0] - numbers[k][0])) {
+	for (int i{}; i<nr_size; ++i)
+	{
+		for (int k{i+1}; k<=i+D; ++k)
+		{
+			if (k < nr_size && M >= abs(numbers[i][0] - numbers[k][0]))
+			{
 				numbers[i].push_back(k);
 				numbers[k].push_back(i);
 			}
