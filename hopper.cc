@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <vector>
 #include <string>
 #include <stack>
@@ -8,7 +7,6 @@
 using namespace std;
 
 void get_input_values(vector<vector<int>>& v);
-void print(vector<vector<int>>& numbers);
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
 int depth_first_search(vector<vector<int>>& numbers);
 
