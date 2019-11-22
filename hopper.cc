@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void get_input_values(int n, vector<vector<int>>& v);
+void get_input_values(vector<vector<int>>& v);
 void print(vector<vector<int>>& numbers);
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
 int depth_first_search(vector<vector<int>>& numbers);
@@ -18,23 +18,21 @@ class path {
 public:
 	path() : nodes{}, record_depth{} {}
 
-	void add_node(pair<int, int> parent_child)
+	void add_node(pair<int, int>& parent_child)
 	{
-		// if path = A->B->C and input C->D: add D to path.
-		// if path = A->B->C and input B->D: 1. log the size of current path.
-		//    2. backtrack to path = A->B. 3. add D to path.
-		if (parent_child.first != -1) {
-			//if (parent_child.first != nodes[nodes.size() - 1]) { log_depth(); }
-
+		if (parent_child.first != -1)
+		{
 			while (parent_child.first != nodes[nodes.size() - 1]) { nodes.pop_back(); }
 		}
+
 		nodes.push_back(parent_child.second);
+
 		log_depth();
 	}
 
-	void print() {cout<<nodes[0];for(int i{1};i<nodes.size();i++)cout<<"->"<<nodes[i];}
+	void print() { cout << nodes[0]; for (int i{ 1 }; i < nodes.size(); i++) cout << "->" << nodes[i]; }
 
-	bool contains(int node_idx) {for(int i:nodes){if(i==node_idx)return true;}return false;};
+	bool contains(int node_idx) { for (int i : nodes) { if (i == node_idx) return true; } return false; }
 
 	int get_record() { return record_depth; }
 
@@ -54,7 +52,7 @@ int main()
 
 	vector<vector<int>> numbers(n);
 
-	get_input_values(n, numbers); // parameter n not needed?
+	get_input_values(numbers);
 
 	calculate_neighbours(numbers, D, M);
 
@@ -65,21 +63,22 @@ int main()
 	cout << hops << endl;
 }
 
-// performs a DFS search for the longest exploration sequence
 int depth_first_search(vector<vector<int>>& numbers)
 {
 	int max_hops{};
 
-	// loop through all nodes in the graph
-	for (int start{}; start<numbers.size(); ++start) {
-
+	for (int start{}; start<numbers.size(); ++start)
+	{
 		if (verbose) cout << endl << "node: " << start << endl;
 
 		path path{};
 
 		stack<pair<int, int>> s{}; s.push(make_pair<int, int>(-1, move(start)));
-		while (!s.empty()) {
+
+		while (!s.empty())
+		{
 			pair<int, int> pathpair{ s.top() }; s.pop();
+
 			path.add_node(pathpair);
 
 			int curr = pathpair.second;
@@ -87,7 +86,6 @@ int depth_first_search(vector<vector<int>>& numbers)
 			if (verbose) { cout << "\tpopped: " << curr << ", depth " << path.get_size() << endl;
 					cout << "\tpath: "; path.print(); cout << endl; }
 
-			// push all neighbours not in our path to stack
 			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
 			{
 				if (!path.contains(numbers[curr][neighbour]))
@@ -111,9 +109,9 @@ int depth_first_search(vector<vector<int>>& numbers)
 }
 
 // numbers[1..n][0] are the values from the user input
-void get_input_values(int n, vector<vector<int>>& numbers)
+void get_input_values(vector<vector<int>>& numbers)
 {
-	for (int i{}; i<n; ++i)
+	for (int i{}; i<numbers.size(); ++i)
 	{
 		int num;
 		cin >> num;
@@ -126,12 +124,9 @@ void calculate_neighbours(vector<vector<int>>& numbers, int D, int M)
 {
 	long unsigned int nr_size {numbers.size()};
 
-	for (int i{}; i<nr_size; ++i)
-	{
-		for (int k{i+1}; k<=i+D; ++k)
-		{
-			if (k < nr_size && M >= abs(numbers[i][0] - numbers[k][0]))
-			{
+	for (int i{}; i<nr_size; ++i) {
+		for (int k{i+1}; k<=i+D; ++k) {
+			if (k < nr_size && M >= abs(numbers[i][0] - numbers[k][0])) {
 				numbers[i].push_back(k);
 				numbers[k].push_back(i);
 			}
