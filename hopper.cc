@@ -5,8 +5,6 @@
 #include <stack>
 #include <unordered_map>
 
-#define verbose false
-
 using namespace std;
 
 void get_input_values(vector<vector<int>>& v);
@@ -29,8 +27,6 @@ public:
 
 		log_depth();
 	}
-
-	void print() { cout << nodes[0]; for (int i{ 1 }; i < nodes.size(); i++) cout << "->" << nodes[i]; }
 
 	bool contains(int node_idx) { for (int i : nodes) { if (i == node_idx) return true; } return false; }
 
@@ -56,8 +52,6 @@ int main()
 
 	calculate_neighbours(numbers, D, M);
 
-	if (verbose) print(numbers);
-
 	int hops = depth_first_search(numbers);
 
 	cout << hops << endl;
@@ -69,8 +63,6 @@ int depth_first_search(vector<vector<int>>& numbers)
 
 	for (int start{}; start<numbers.size(); ++start)
 	{
-		if (verbose) cout << endl << "node: " << start << endl;
-
 		path path{};
 
 		stack<pair<int, int>> s{}; s.push(make_pair<int, int>(-1, move(start)));
@@ -83,20 +75,14 @@ int depth_first_search(vector<vector<int>>& numbers)
 
 			int curr = pathpair.second;
 
-			if (verbose) { cout << "\tpopped: " << curr << ", depth " << path.get_size() << endl;
-					cout << "\tpath: "; path.print(); cout << endl; }
-
 			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
 			{
 				if (!path.contains(numbers[curr][neighbour]))
 				{
 					s.push(make_pair<int, int>(move(curr), move(numbers[curr][neighbour])));
-					if (verbose) { cout << "\t\tpushed: " << numbers[curr][neighbour] << endl; }
 				}
 			}
 		}
-
-		if (verbose) cout << "\trecord depth: " << path.get_record() << endl;
 
 		if (path.get_record() > max_hops)
 			max_hops = path.get_record();
@@ -131,23 +117,5 @@ void calculate_neighbours(vector<vector<int>>& numbers, int D, int M)
 				numbers[k].push_back(i);
 			}
 		}
-	}
-}
-
-// prints numbers and neighbours
-void print(vector<vector<int>>& numbers)
-{
-	cout << endl << setw(5) << left << "idx" << setw(5) << left << "value"
-		<< setw(12) << right << "neighbours" << endl;
-
-	for (int row{}; row<numbers.size(); ++row)
-	{
-		cout << " " << row << ":" << setw(5) << numbers[row][0] << "    ";
-
-		for (int k{1}; k<numbers[row].size();++k)
-		{
-			cout << numbers[row][k] << " ";
-		}
-		cout << endl;
 	}
 }
