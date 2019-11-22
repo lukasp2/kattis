@@ -8,6 +8,7 @@
 #define verbose false
 
 using namespace std;
+
 void get_input_values(int n, vector<vector<int>>& v);
 void print(vector<vector<int>>& numbers);
 void calculate_neighbours(vector<vector<int>>& numbers, int D, int M);
@@ -15,43 +16,59 @@ int depth_first_search(vector<vector<int>>& numbers);
 
 class path {
 public:
-	path() : nodes{}, record_depth{}, nodes_since_last_branch{} {}
-	void add_node(int node_idx, vector<vector<int>>& n) {
-		nodes.push_back(node_idx);
-		if (n[node_idx].size()-1 > 2) nodes_since_last_branch=0; else nodes_since_last_branch++;
+	path() : nodes{}, record_depth{} {}
+
+	void add_node(pair<int, int> parent_child)
+	{
+		// if path = A->B->C and input C->D: add D to path.
+		// if path = A->B->C and input B->D: 1. log the size of current path.
+		//    2. backtrack to path = A->B. 3. add D to path.
+		if (parent_child.first != -1) {
+			//if (parent_child.first != nodes[nodes.size() - 1]) { log_depth(); }
+
+			while (parent_child.first != nodes[nodes.size() - 1]) { nodes.pop_back(); }
+		}
+		nodes.push_back(parent_child.second);
+		log_depth();
 	}
-	int get_size() {return nodes.size();}
-	void backtrack() {while(nodes_since_last_branch--) nodes.pop_back();}
+
 	void print() {cout<<nodes[0];for(int i{1};i<nodes.size();i++)cout<<"->"<<nodes[i];}
+
 	bool contains(int node_idx) {for(int i:nodes){if(i==node_idx)return true;}return false;};
-	void log_depth() {if(nodes.size()>record_depth){record_depth=nodes.size();}};
-	int get_record() {return record_depth;}
-	int get_nodes_since_last_branch() {return nodes_since_last_branch;}
+
+	int get_record() { return record_depth; }
+
+	int get_size() { return nodes.size(); }
+
 private:
+	void log_depth() { if (nodes.size() > record_depth) { record_depth = nodes.size(); } };
+
 	vector<int> nodes{};
+
 	int record_depth{};
-	int nodes_since_last_branch{};
 };
 
 int main()
 {
-	int n, D, M;
-	cin >> n >> D >> M;
+	int n, D, M; cin >> n >> D >> M;
 
 	vector<vector<int>> numbers(n);
-	get_input_values(n, numbers);
+
+	get_input_values(n, numbers); // parameter n not needed?
 
 	calculate_neighbours(numbers, D, M);
+
 	if (verbose) print(numbers);
+
 	int hops = depth_first_search(numbers);
+
 	cout << hops << endl;
 }
 
 // performs a DFS search for the longest exploration sequence
 int depth_first_search(vector<vector<int>>& numbers)
 {
-	int max_steps{};
-	bool found{};
+	int max_hops{};
 
 	// loop through all nodes in the graph
 	for (int start{}; start<numbers.size(); ++start) {
@@ -59,57 +76,38 @@ int depth_first_search(vector<vector<int>>& numbers)
 		if (verbose) cout << endl << "node: " << start << endl;
 
 		path path{};
-		unordered_map<int, bool> visited{};
 
-		stack<int> s{}; s.push(start);
+		stack<pair<int, int>> s{}; s.push(make_pair<int, int>(-1, move(start)));
 		while (!s.empty()) {
+			pair<int, int> pathpair{ s.top() }; s.pop();
+			path.add_node(pathpair);
 
-			int curr{ s.top() }; s.pop();
-			while (!s.empty() && path.contains(curr)) { curr = s.top(); s.pop(); }
-			if (path.contains(curr)) break;
-
-			path.add_node(curr, numbers);
-			visited[curr] = true; //neccessary?only for start?
-			bool dead_end{true};
+			int curr = pathpair.second;
 
 			if (verbose) { cout << "\tpopped: " << curr << ", depth " << path.get_size() << endl;
 					cout << "\tpath: "; path.print(); cout << endl; }
 
-			// push all unvisited neighbours to the stack
+			// push all neighbours not in our path to stack
 			for (int neighbour{1}; neighbour<numbers[curr].size(); ++neighbour)
 			{
-				//if (!visited[ numbers[curr][neighbour] ]) {
-				if (!path.contains(numbers[curr][neighbour]) || !visited[numbers[curr][neighbour]]) {
-					s.push(numbers[curr][neighbour]);
-					visited[ numbers[curr][neighbour] ] = true;
-					dead_end=false;
+				if (!path.contains(numbers[curr][neighbour]))
+				{
+					s.push(make_pair<int, int>(move(curr), move(numbers[curr][neighbour])));
 					if (verbose) { cout << "\t\tpushed: " << numbers[curr][neighbour] << endl; }
-				}
-			}
-
-			if (dead_end) {
-				path.log_depth();
-
-				if (path.get_nodes_since_last_branch() > 0) {
-					if (verbose) cout << "\tdead end, backtrac to latest branch!" << endl;
-					path.backtrack();
-				}
-				else {
-					break;
 				}
 			}
 		}
 
 		if (verbose) cout << "\trecord depth: " << path.get_record() << endl;
 
-		if (path.get_record() > max_steps)
-			max_steps = path.get_record();
+		if (path.get_record() > max_hops)
+			max_hops = path.get_record();
 
-		if (max_steps == numbers.size())
+		if (max_hops == numbers.size())
 			break;
 	}
 
-	return max_steps;
+	return max_hops;
 }
 
 // numbers[1..n][0] are the values from the user input
