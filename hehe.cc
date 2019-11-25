@@ -3,7 +3,7 @@
 #include <ctime>
 #include <vector>
 
-#define ARR_SIZE 1000
+#define ARR_SIZE 500
 #define IDX_JMP 7
 #define VAL_JMP 1
 

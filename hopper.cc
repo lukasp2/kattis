@@ -1,4 +1,6 @@
 #include <iostream>
+#include <iterator>
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <stack>
@@ -6,7 +8,7 @@
 #include <unordered_map>
 #include <iomanip>
 
-#define verbose false
+#define verbose true
 
 using namespace std;
 
@@ -72,7 +74,7 @@ int dfs(vector<vector<int>>& numbers)
 	analyze(candidates, numbers, largest_nw, bottle_nodes);
 
 	if (verbose) cout << "largest nw: " << largest_nw << endl;
-
+	return 0;
 	for (int start{}; start<numbers.size(); ++start) if ( candidates[start] == true ) {
 	{
 		path path{};
@@ -87,13 +89,13 @@ int dfs(vector<vector<int>>& numbers)
 
 			int curr = pathpair.second;
 
-			if (verbose) {cout << "path: "; path.print(); cout << endl; }
-
-			for (int neighbour{ 1 }; neighbour<numbers[curr].size(); ++neighbour)
+			// pushing so that the closest neighbour is popped first
+			for (unsigned long int neighbour{ numbers[curr].size() - 1 }; neighbour > 0; --neighbour)
 			{
 				if (!path.contains( numbers[curr][neighbour] ))
 				{
 					pair<int, int> p { curr, numbers[curr][neighbour] };
+
 					s.push(p);
 				}
 			}
@@ -137,7 +139,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	unordered_map<int, bool> visited{};
 	for (int i{}; i<numbers.size(); ++i)
 	{
-		if (!visited[i])
+		if (!visited[i] && candidates[i])
 		{
 			int longest_path = get_max_path(candidates, numbers, visited, i);
 
@@ -201,6 +203,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 
 	// print bottle nodes
 	if (verbose) { cout << "bottle nodes: "; for (int i : bottle_nodes) { cout << i << " "; } cout << endl; }
+
 }
 
 // An admissible heuristic that estimates how long the longest path can be.
@@ -342,6 +345,8 @@ void print(vector<vector<int>>& numbers)
 // path member functions
 void path::add_node(pair<int, int>& parent_child)
 {
+	if (verbose && parent_child.first != -1 && parent_child.first != nodes.back()) {cout << "path: "; print(); cout << endl; }
+
 	if (parent_child.first != -1)
 	{
 		while ( parent_child.first != nodes.back() )
@@ -357,18 +362,3 @@ void path::add_node(pair<int, int>& parent_child)
 		record_depth = nodes.size();
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
