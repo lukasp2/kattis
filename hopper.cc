@@ -109,95 +109,6 @@ int dfs(vector<vector<int>>& numbers)
 	return max_hops;
 }
 
-// An admissible heuristic that estimates how long the longest path can be.
-int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
-	unordered_map<int, bool>& visited, int node_idx)
-{
-	int edges{};
-
-	int nodes{};
-
-	visited[node_idx] = true;
-
-	queue<int> q{}; q.push(node_idx);
-
-	while(!q.empty())
-	{
-		int curr { q.front() }; q.pop();
-
-		nodes++;
-
-		if (numbers[curr].size() == 2) edges++;
-
-		for (int i{1}; i < numbers[curr].size(); i++)
-		{
-			if (!visited[numbers[curr][i]])
-			{
-				q.push(numbers[curr][i]);
-				visited[numbers[curr][i]] = true;
-			}
-		}
-	}
-
-	if (edges >= 2) return nodes - edges + 2;
-
-	return nodes;
-}
-
-// excludes nodes that cannot be a starting node in the longest path
-void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
-	int back, int i, int rec_count)
-{
-	if (rec_count++ > 2000) return; // prevent kattis memory overuse (1024 MB)
-
-	int neigh{1};
-	while (numbers[i][neigh] == back) neigh++;
-
-	if (numbers[numbers[i][neigh]].size() == 3)
-	{
-		candidates[numbers[i][neigh]] = false;
-
-		exclude_nodes(candidates, numbers, i, numbers[i][neigh], rec_count);
-
-		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
-	}
-
-	if ( numbers[numbers[i][neigh]].size() > 3 )
-	{
-		candidates[numbers[i][neigh]] = false;
-
-		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
-	}
-}
-
-// exclude all nodes in a network
-void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx)
-{
-	unordered_map<int, bool> visited{};
-
-	visited[node_idx] = true;
-
-	queue<int> q{}; q.push(node_idx);
-
-	while(!q.empty())
-	{
-		int curr { q.front() }; q.pop();
-
-		candidates[curr] = false;
-
-		if(verbose) cout << "-"<< curr << " ";
-
-		for (int i{1}; i < numbers[curr].size(); i++)
-		{
-			if (!visited[numbers[curr][i]])
-			{
-				q.push(numbers[curr][i]);
-				visited[numbers[curr][i]] = true;
-			}
-		}
-	}
-}
-
 // gather constraints to make searching less time complex
 void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	int& record_path, vector<int>& bottle_nodes)
@@ -290,6 +201,95 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 
 	// print bottle nodes
 	if (verbose) { cout << "bottle nodes: "; for (int i : bottle_nodes) { cout << i << " "; } cout << endl; }
+}
+
+// An admissible heuristic that estimates how long the longest path can be.
+int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	unordered_map<int, bool>& visited, int node_idx)
+{
+	int edges{};
+
+	int nodes{};
+
+	visited[node_idx] = true;
+
+	queue<int> q{}; q.push(node_idx);
+
+	while(!q.empty())
+	{
+		int curr { q.front() }; q.pop();
+
+		nodes++;
+
+		if (numbers[curr].size() == 2) edges++;
+
+		for (int i{1}; i < numbers[curr].size(); i++)
+		{
+			if (!visited[numbers[curr][i]])
+			{
+				q.push(numbers[curr][i]);
+				visited[numbers[curr][i]] = true;
+			}
+		}
+	}
+
+	if (edges >= 2) return nodes - edges + 2;
+
+	return nodes;
+}
+
+// excludes nodes that cannot be a starting node in the longest path
+void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
+	int back, int i, int rec_count)
+{
+	if (rec_count++ > 2000) return; // prevent kattis memory overuse (1024 MB)
+
+	int neigh{1};
+	while (numbers[i][neigh] == back) neigh++;
+
+	if (numbers[numbers[i][neigh]].size() == 3)
+	{
+		candidates[numbers[i][neigh]] = false;
+
+		exclude_nodes(candidates, numbers, i, numbers[i][neigh], rec_count);
+
+		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
+	}
+
+	if ( numbers[numbers[i][neigh]].size() > 3 )
+	{
+		candidates[numbers[i][neigh]] = false;
+
+		if(verbose) cout << "-"<< numbers[i][neigh] << " ";
+	}
+}
+
+// exclude all nodes in a network
+void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx)
+{
+	unordered_map<int, bool> visited{};
+
+	visited[node_idx] = true;
+
+	queue<int> q{}; q.push(node_idx);
+
+	while(!q.empty())
+	{
+		int curr { q.front() }; q.pop();
+
+		candidates[curr] = false;
+
+		if(verbose) cout << "-"<< curr << " ";
+
+		for (int i{1}; i < numbers[curr].size(); i++)
+		{
+			if (!visited[numbers[curr][i]])
+			{
+				q.push(numbers[curr][i]);
+				visited[numbers[curr][i]] = true;
+			}
+		}
+	}
 }
 
 // numbers[1..n][0] are the values from the user input
