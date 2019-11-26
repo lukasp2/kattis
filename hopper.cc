@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iterator>
 #include <algorithm>
 #include <vector>
 #include <string>
@@ -15,10 +14,16 @@ using namespace std;
 void get_input(vector<vector<int>>& v);
 void get_graph(vector<vector<int>>& numbers, int D, int M);
 int dfs(vector<vector<int>>& numbers);
+
+void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw, vector<int>& bottle_nodes);
 int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, unordered_map<int, bool>& visited, int node_idx);
 void exclude_nodes(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int back, int i, int rec_count);
 void exclude_network(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int node_idx);
-void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers, int& largest_nw, vector<int>& bottle_nodes);
+int common_neighbour(vector<vector<int>>& numbers, int node_1, int node_2);
+void remove_neighbour(vector<vector<int>>& numbers, int node_A, int node_B);
+void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destination_node, bool move, int dont_cp = -1);
+void remove_duplicate_neighbours(vector<int>& neighbours);
+
 void print(vector<vector<int>>& numbers);
 
 class path {
@@ -74,12 +79,13 @@ int dfs(vector<vector<int>>& numbers)
 	analyze(candidates, numbers, largest_nw, bottle_nodes);
 
 	if (verbose) cout << "largest nw: " << largest_nw << endl;
-	return 0;
+
 	for (int start{}; start<numbers.size(); ++start) if ( candidates[start] == true ) {
 	{
 		path path{};
 
-		stack<pair<int, int>> s{}; s.push(make_pair<int, int>(-1, move(start)));
+		pair<int, int> p{-1, start};
+		stack<pair<int, int>> s{}; s.push(p);
 
 		while (!s.empty())
 		{
@@ -133,6 +139,7 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 			exclude_nodes(candidates, numbers, i, i, rec_count);
 		}
 	}
+
 	if (verbose) cout << endl;
 
 	// estimate a max-length of the longest path of connected nodes
@@ -148,7 +155,6 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 				record_path = longest_path;
 			}
 		}
-
 	}
 
 	if (verbose) cout << "excluding networks:" << endl;
@@ -170,43 +176,153 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 
 	if (verbose) cout << endl;
 
-	// get bottle neck nodes
-	bottle_nodes.push_back( 0 );
-	for (int i{ 7 }; i<numbers.size(); i++)
+	// rework complete sub graph (stands for majority of performance improvement in dense graphs)
+	for (int node_A{}; node_A<numbers.size(); ++node_A)
 	{
-		// choose max index of the neighbours to numbers[i]
-		int max_elem{ i };
-		for (int k{ 1 }; k < numbers[i].size(); k++)
+		if (numbers[node_A].size() > 2)
 		{
-			if ( numbers[i][k] > max_elem ) max_elem = numbers[i][k];
-		}
-
-		i = max_elem;
-
-		// if none of the nodes (i-6 .. i-1) refer to a node >i, i is a bottle node
-		bool bottlenode = true;
-		for (int k{i-6}; k < i; k++)
-		{
-			for (int u{}; u < numbers[k].size(); u++)
+			// go through our neighbours, see if they are neighbours with eachother
+			vector<int> cpy{ numbers[node_A] };
+			for (int i{ 1 }; i<cpy.size(); ++i)
 			{
-				if (numbers[k][u] > i) { bottlenode = false; break; }
+				int node_B = numbers[node_A][i];
+
+				int node_C = common_neighbour(numbers, node_A, node_B);
+
+				// there is a complete graph with node_A, node_B, and node_C
+				if (node_C != -1)
+				{
+					if (verbose) cout << "node " << node_A << ", " << node_B << ", and " << node_C
+					<< " are eachothers neighbours" << endl;
+
+					// move neighbours from node B to node A
+					// copy from C to A
+					// copy from A to C
+					// cut edge between A to C
+
+					if (verbose) cout << "move from node " << node_B << " to node " << node_A << endl;
+					copy_neighbours(numbers, node_B, node_A, true, node_C);
+
+					if (verbose) cout << "new table" << endl;
+					if (verbose) print(numbers);
+
+					if (verbose) cout << "copy from node " << node_C << " to node " << node_A << endl;
+					copy_neighbours(numbers, node_C, node_A, false, node_B);
+
+					if (verbose) cout << "new table" << endl;
+					if (verbose) print(numbers);
+
+					if (verbose) cout << "copy from node " << node_A << " to node " << node_C << endl;
+					copy_neighbours(numbers, node_A, node_C, false, node_B);
+
+					if (verbose) cout << "new table" << endl;
+					if (verbose) print(numbers);
+
+					if (verbose) cout << "remove connection between nodes " << node_A << " and " << node_C << endl;
+					remove_neighbour(numbers, node_A, node_C);
+					remove_neighbour(numbers, node_C, node_A);
+
+					if (verbose) cout << "new table" << endl;
+					if (verbose) print(numbers);
+
+					if (verbose) cout << "add neighbours " << " to " << node_B << endl;
+					numbers[node_B].push_back(node_A);
+					numbers[node_B].push_back(node_C);
+
+					sort(numbers[node_A].begin() + 1, numbers[node_A].end());
+					sort(numbers[node_C].begin() + 1, numbers[node_C].end());
+
+					remove_duplicate_neighbours(numbers[node_A]);
+					remove_duplicate_neighbours(numbers[node_C]);
+
+					if (verbose) cout << "new table []" << endl;
+					if (verbose) print(numbers);
+
+					break;
+				}
 			}
-
-			if (!bottlenode) { break; }
 		}
+	}
+	if (verbose) cout << "final table" << endl;
+	if (verbose) print(numbers);
+}
 
-		if (bottlenode)
+void remove_duplicate_neighbours(vector<int>& neighbours)
+{
+	vector<int> tripples{};
+
+	for (int i{ 1 }; i<neighbours.size(); ++i)
+	{
+		int nums = count(neighbours.begin(), neighbours.end(), neighbours[i]);
+
+		if (nums == 3)
 		{
-			bottle_nodes.push_back(i);
+			tripples.push_back(neighbours[i]);
+			neighbours.erase(neighbours.begin() + i);
 		}
 	}
 
-	// print bottle nodes
-	if (verbose) { cout << "bottle nodes: "; for (int i : bottle_nodes) { cout << i << " "; } cout << endl; }
+	auto last = unique(neighbours.begin(), neighbours.end());
+	neighbours.erase(last, neighbours.end());
 
+//	for (int i : tripples)
+	{
+		// add i between node_A and node_B
+		// move neighbours numbers[i][1..k] to node A and B
+	}
 }
 
-// An admissible heuristic that estimates how long the longest path can be.
+void remove_neighbour(vector<vector<int>>& numbers, int node_A, int node_B)
+{
+	for (int i{}; i<numbers[node_A].size(); ++i)
+	{
+		if (numbers[node_A][i] == node_B)
+		{
+			numbers[node_A].erase(numbers[node_A].begin() + i);
+		}
+	}
+}
+
+void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destination_node, bool move, int dont_cp)
+{
+	for (int i{ 1 }; i<numbers[source_node].size(); ++i)
+	{
+		// dont copy the destination index to the destination vector
+		if (numbers[source_node][i] != destination_node && numbers[source_node][i] != dont_cp)
+		{
+			numbers[destination_node].push_back(numbers[source_node][i]);
+		}
+	}
+
+	// optionally erases the source vector
+	if (move)
+	{
+		int val = numbers[source_node][0];
+		numbers[source_node].clear();
+		numbers[source_node].push_back(val);
+	}
+}
+
+int common_neighbour(vector<vector<int>>& numbers, int node_1, int node_2)
+{
+	for (int i{ 1 }; i<numbers[node_1].size(); ++i)
+	{
+		for (int k{ 1 }; k<numbers[node_2].size(); ++k)
+		{
+			if (numbers[node_1][i] == numbers[node_2][k])
+			{
+				return numbers[node_1][i];
+			}
+			if (numbers[node_1][i] < numbers[node_2][k])
+			{
+				break;
+			}
+		}
+	}
+	return -1;
+}
+
+// Estimate how long the longest path can potentially be (never underestimates the path)
 int get_max_path(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	unordered_map<int, bool>& visited, int node_idx)
 {
