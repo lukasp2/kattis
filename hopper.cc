@@ -25,7 +25,7 @@ void remove_neighbour(vector<vector<int>>& numbers, int node1, int node2);
 void add_neighbour(vector<vector<int>>& numbers, int node1, int node2);
 
 void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destination_node, bool move, int dont_cp = -1);
-vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node);
+vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node, int node_B);
 void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_A, int node_B, int node_C);
 
 void print(vector<vector<int>>& numbers);
@@ -178,11 +178,11 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 					add_neighbour(numbers, node_B, node_A);
 					add_neighbour(numbers, node_B, node_C);
 					//numbers[node_B].push_back(node_A);
-					//numbers[node_B].push_back(node_C);
+		 			//numbers[node_B].push_back(node_C);
 
 					// removing duplicates from node_A and node_C
-					remove_duplicate_neighbours(numbers, node_A);
-					vector<int> tripples = remove_duplicate_neighbours(numbers, node_C);
+					remove_duplicate_neighbours(numbers, node_A, node_B);
+					vector<int> tripples = remove_duplicate_neighbours(numbers, node_C, node_B);
 
 					if (verbose) { cout << "first step complete, table:" << endl;
 						print(numbers); cout << endl;
@@ -205,9 +205,10 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 			}
 		}
 	}
+
 	if (verbose) cout << "final table" << endl;
 	if (verbose) print(numbers);
-	
+
 	// setting all nodes to be a candidate
 	for (int i{}; i<numbers.size(); ++i)
 	{
@@ -282,17 +283,11 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 
 			if (neigh != node_A && neigh != node_C && !contains(numbers[node_A], neigh))
 			{
-				//cout << "neighbour of the tripples: " << neigh << endl;
 				add_neighbour(numbers, node_A, neigh);
 				add_neighbour(numbers, node_C, neigh);
 
 				// neighbour of the tripple removes the tripple as its neighbour
-				//remove_neighbour(numbers[neigh], tripples[i]);
 				remove_neighbour(numbers, neigh, tripples[i]);
-
-				// neighbour of the tripple adds node A and C as neighbour
-				//numbers[neigh].push_back(node_A);
-				//numbers[neigh].push_back(node_C);
 			}
 		}
 
@@ -300,6 +295,7 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 		//int value = numbers[tripples[i]][0];
 		//numbers[tripples[i]].clear();
 		//numbers[tripples[i]].push_back(value);
+
 		for (long unsigned int k { numbers[tripples[i]].size() - 1 }; k>0; --k) {
 			remove_neighbour(numbers, tripples[i], numbers[tripples[i]][k]);
 		}
@@ -312,8 +308,6 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 	for (int i{}; i<tripples.size(); ++i)
 	{
 		// A and B removes each other as neighbours
-		//remove_neighbour(numbers[node_A], node_B);
-		//remove_neighbour(numbers[node_B], node_A);
 		remove_neighbour(numbers, node_A, node_B);
 
 		//remove_neighbour(numbers[node_C], tripples[i]);
@@ -343,7 +337,7 @@ void add_to_chain(vector<vector<int>>& numbers, vector<int>& tripples, int node_
 	}
 }
 
-vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node)
+vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node, int node_B)
 {
 	vector<int> tripples{};
 
@@ -353,10 +347,12 @@ vector<int> remove_duplicate_neighbours(vector<vector<int>>& numbers, int node)
 	{
 		int nums = count(numbers[node].begin() + 1, numbers[node].end(), numbers[node][i]);
 
+		//remove node B from neigh here
 		if (nums > 2)
 		{
 			tripples.push_back(numbers[node][i]);
 			remove_neighbour(numbers, node, numbers[node][i]);
+			remove_neighbour(numbers, node_B, numbers[node][i]);
 		}
 	}
 
@@ -395,13 +391,13 @@ void copy_neighbours(vector<vector<int>>& numbers, int source_node, int destinat
 	// optionally erases the source vector
 	if (move)
 	{
-		//int val = numbers[source_node][0];
-		//numbers[source_node].clear();
-		//numbers[source_node].push_back(val);
+		int val = numbers[source_node][0];
+		numbers[source_node].clear();
+		numbers[source_node].push_back(val);
 
-		for (long unsigned int k { numbers[source_node].size() - 1 }; k>0; --k) {
-			remove_neighbour(numbers, source_node, numbers[source_node][k]);
-		}
+		//for (long unsigned int k { numbers[source_node].size() - 1 }; k>0; --k) {
+		//	remove_neighbour(numbers, source_node, numbers[source_node][k]);
+		//}
 
 	}
 }
