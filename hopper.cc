@@ -125,61 +125,6 @@ int dfs(vector<vector<int>>& numbers)
 void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	int& record_path, vector<int>& bottle_nodes)
 {
-	// setting all nodes to be a candidate
-	for (int i{}; i<numbers.size(); ++i)
-	{
-		candidates[i] = true;
-	}
-
-	if (verbose) cout << "excluding neighbours to edge nodes:" << endl;
-
-	// exclude neighbours to edge nodes
-	for (int i{}; i<numbers.size(); ++i)
-	{
-		if (numbers[i].size() == 2)
-		{
-			int rec_count{};
-
-			exclude_nodes(candidates, numbers, i, i, rec_count);
-		}
-	}
-
-	if (verbose) cout << endl;
-
-	// estimate a max-length of the longest path of connected nodes
-	unordered_map<int, bool> visited{};
-	for (int i{}; i<numbers.size(); ++i)
-	{
-		if (!visited[i] && candidates[i])
-		{
-			int longest_path = get_max_path(candidates, numbers, visited, i);
-
-			if (longest_path > record_path)
-			{
-				record_path = longest_path;
-			}
-		}
-	}
-
-	if (verbose) cout << "excluding networks:" << endl;
-
-	// exclude all networks whose max-length path is below 75% of the est. longest path
-	visited = unordered_map<int, bool>{};
-	for (int i{}; i<numbers.size(); ++i)
-	{
-		if (!visited[i])
-		{
-			int longest_path = get_max_path(candidates, numbers, visited, i);
-
-			if (longest_path < record_path * 0.75)
-			{
-				exclude_network(candidates, numbers, i);
-			}
-		}
-	}
-
-	if (verbose) cout << endl;
-
 	// rework complete sub graph (stands for majority of performance improvement in dense graphs)
 	for (int node_A{}; node_A<numbers.size(); ++node_A)
 	{
@@ -262,6 +207,61 @@ void analyze(unordered_map<int, bool>& candidates, vector<vector<int>>& numbers,
 	}
 	if (verbose) cout << "final table" << endl;
 	if (verbose) print(numbers);
+	
+	// setting all nodes to be a candidate
+	for (int i{}; i<numbers.size(); ++i)
+	{
+		candidates[i] = true;
+	}
+
+	if (verbose) cout << "excluding neighbours to edge nodes:" << endl;
+
+	// exclude neighbours to edge nodes
+	for (int i{}; i<numbers.size(); ++i)
+	{
+		if (numbers[i].size() == 2)
+		{
+			int rec_count{};
+
+			exclude_nodes(candidates, numbers, i, i, rec_count);
+		}
+	}
+
+	if (verbose) cout << endl;
+
+	// estimate a max-length of the longest path of connected nodes
+	unordered_map<int, bool> visited{};
+	for (int i{}; i<numbers.size(); ++i)
+	{
+		if (!visited[i] && candidates[i])
+		{
+			int longest_path = get_max_path(candidates, numbers, visited, i);
+
+			if (longest_path > record_path)
+			{
+				record_path = longest_path;
+			}
+		}
+	}
+
+	if (verbose) cout << "excluding networks:" << endl;
+
+	// exclude all networks whose max-length path is below 75% of the est. longest path
+	visited = unordered_map<int, bool>{};
+	for (int i{}; i<numbers.size(); ++i)
+	{
+		if (!visited[i])
+		{
+			int longest_path = get_max_path(candidates, numbers, visited, i);
+
+			if (longest_path < record_path * 0.75)
+			{
+				exclude_network(candidates, numbers, i);
+			}
+		}
+	}
+
+	if (verbose) cout << endl;
 }
 
 bool contains(vector<int>& neighbours, int node)
